@@ -1,0 +1,80 @@
+#include "imports/stdlib.fc";
+
+;;Global variables
+global cell dao_name;
+global cell dao_purpose;
+global cell members;
+global cell proposals_list;
+
+;;===============================STORAGE===================================*
+
+() load_data() impure {
+    var ds = get_data().begin_parse();
+    dao_name = ds~load_ref();
+    dao_purpose = ds~load_ref();
+    members = ds~load_dict();
+    proposals_list = ds~load_dict();
+    ds.end_parse();
+}
+
+() save_data(
+    cell dao_name,
+    cell dao_purpose,
+    cell members,
+    cell proposals_list
+) impure inline {
+    set_data(
+        begin_cell()
+        .store_ref(dao_name)
+        .store_ref(dao_purpose)
+        .store_dict(members)
+        .store_dict(proposals_list)
+        .end_cell()
+    );
+}
+
+;;============================MESSAGES=============================
+
+() recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
+    slice cs = in_msg_full.begin_parse();
+    int flags = cs~load_uint(4);
+
+    if (flags & 1) { ;; ignore all bounced messages 
+        return ();
+    }
+
+    if (in_msg_body.slice_empty?()) { 
+    return (); 
+    }
+
+    load_data();
+    int op = in_msg_body~load_uint(32);
+    if (op == 1) {;;Add new member
+        members = in_msg_body~load_ref();
+    }
+    if (op == 2) {;;Create proposal
+        proposals_list = in_msg_body~load_ref();
+    }
+    save_data(
+        dao_name,
+        dao_purpose,
+        members,
+        proposals_list
+    );
+}
+
+;;===============================GETTERS==============================
+
+cell get_dao_members() method_id {
+    load_data();
+    return members;
+}
+
+cell get_dao_proposals() method_id {
+    load_data();
+    return proposals_list;
+}
+
+cell get_dao_config() method_id {
+    return get_data();
+}
