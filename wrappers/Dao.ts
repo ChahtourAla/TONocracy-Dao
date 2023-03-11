@@ -84,10 +84,41 @@ export class Dao implements Contract {
         });
     }
 
-    async sendNewMember(provider: ContractProvider, via: Sender) {
+    async sendNewMember(
+        provider: ContractProvider,
+        via: Sender,
+        opts: {
+            position: number;
+            address: Address;
+        }
+    ) {
         const messageBody = beginCell()
             .storeUint(crc32str('op::add_new_member'), 32)
             .storeUint(0, 64) // query id
+            .storeUint(opts.position, 32)
+            .storeAddress(opts.address)
+            .endCell();
+
+        await provider.internal(via, {
+            value: toNano('0.05'),
+            sendMode: SendMode.PAY_GAS_SEPARATELY,
+            body: messageBody,
+        });
+    }
+
+    async sendNewProposal(
+        provider: ContractProvider,
+        via: Sender,
+        opts: {
+            position: number;
+            address: Address;
+        }
+    ) {
+        const messageBody = beginCell()
+            .storeUint(crc32str('op::add_new_proposal'), 32)
+            .storeUint(0, 64) // query id
+            .storeUint(opts.position, 32)
+            .storeAddress(opts.address)
             .endCell();
 
         await provider.internal(via, {

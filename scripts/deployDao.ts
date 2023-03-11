@@ -3,14 +3,13 @@ import { Dao } from '../wrappers/Dao';
 import { compile, NetworkProvider } from '@ton-community/blueprint';
 
 export async function run(provider: NetworkProvider) {
-    let myAddress = Address.parse('kQBr0J1v2e5-Wnv1Heerjsv4WlOccTpHBhjklHkNvF-F2sfL');
     const dao = provider.open(
         Dao.createFromConfig(
             {
                 dao_name: 'Lightency',
                 dao_purpose: 'For test',
-                members: [{ address: myAddress }],
-                proposals_list: [{ address: myAddress }],
+                members: [{ address: Address.parse('kQBr0J1v2e5-Wnv1Heerjsv4WlOccTpHBhjklHkNvF-F2sfL') }],
+                proposals_list: [{ address: Address.parse('EQCFgvGu6qt0lmnMa90UG5jc21IyhSKV-QwD9yD1w6Eaf7vM') }],
             },
             await compile('Dao')
         )

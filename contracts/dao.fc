@@ -46,12 +46,16 @@ global cell proposals_list;
     int query_id = in_msg_body~load_uint(64);
 
     if (op == "op::add_new_member"c) {;;Add new member
-        members = in_msg_body~load_ref();
+        int position = in_msg_body~load_uint(32);
+        slice address = in_msg_body~load_msg_addr();
+        members.udict_add?(256,position,address);
         save_data();
         return();
     }
     if (op == "op::add_new_proposal"c) {;;Create proposal
-        proposals_list = in_msg_body~load_ref();
+        int position = in_msg_body~load_uint(32);
+        slice address = in_msg_body~load_msg_addr();
+        proposals_list.udict_set(256,position,address);
         save_data();
         return();
     }

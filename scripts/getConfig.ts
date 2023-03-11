@@ -8,7 +8,7 @@ export async function run() {
     const client = new TonClient({ endpoint });
 
     // open Dao instance by address
-    const daoAddress = Address.parse('EQDPF74Lr09ZWXvb2-59wivbogl-cB8SzG0DW5p26KGcDu1k'); // replace with dao address
+    const daoAddress = Address.parse('EQCYp7SNfbnyRW5-EAHtt86bP0uSl4YaEPncnFxX6WEc7lls'); // replace with dao address
     const dao = new Dao(daoAddress);
     const daoContract = client.open(dao);
 
