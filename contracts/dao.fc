@@ -17,12 +17,7 @@ global cell proposals_list;
     ds.end_parse();
 }
 
-() save_data(
-    cell dao_name,
-    cell dao_purpose,
-    cell members,
-    cell proposals_list
-) impure inline {
+() save_data() impure inline {
     set_data(
         begin_cell()
         .store_ref(dao_name)
@@ -36,31 +31,34 @@ global cell proposals_list;
 ;;============================MESSAGES=============================
 
 () recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
+    if (in_msg_body.slice_empty?()) { 
+    return (); 
+    }
+    
     slice cs = in_msg_full.begin_parse();
     int flags = cs~load_uint(4);
-
     if (flags & 1) { ;; ignore all bounced messages 
         return ();
     }
 
-    if (in_msg_body.slice_empty?()) { 
-    return (); 
-    }
-
     load_data();
     int op = in_msg_body~load_uint(32);
-    if (op == 1) {;;Add new member
+    int query_id = in_msg_body~load_uint(64);
+
+    if (op == "op::add_new_member"c) {;;Add new member
         members = in_msg_body~load_ref();
+        save_data();
+        return();
     }
-    if (op == 2) {;;Create proposal
+    if (op == "op::add_new_proposal"c) {;;Create proposal
         proposals_list = in_msg_body~load_ref();
+        save_data();
+        return();
     }
-    save_data(
-        dao_name,
-        dao_purpose,
-        members,
-        proposals_list
-    );
+
+    else {
+        throw(0xffff); ;; if the message contains an op that is not known to this contract, we throw
+    }
 }
 
 ;;===============================GETTERS==============================
@@ -75,6 +73,16 @@ cell get_dao_proposals() method_id {
     return proposals_list;
 }
 
-cell get_dao_config() method_id {
+cell get_dao_name() method_id {
+    load_data();
+    return dao_name;
+}
+
+cell get_dao_purpose() method_id {
+    load_data();
+    return dao_purpose;
+}
+
+cell getConfig() method_id {
     return get_data();
 }
