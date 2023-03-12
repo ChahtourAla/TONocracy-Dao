@@ -3,15 +3,17 @@
 ;;Global variables
 global cell dao_name;
 global cell dao_purpose;
+global int creation_time;
 global cell members;
 global cell proposals_list;
 
-;;===============================STORAGE===================================*
+;;===============================STORAGE===================================
 
 () load_data() impure {
     var ds = get_data().begin_parse();
     dao_name = ds~load_ref();
     dao_purpose = ds~load_ref();
+    creation_time = ds~load_uint(64);
     members = ds~load_dict();
     proposals_list = ds~load_dict();
     ds.end_parse();
@@ -22,6 +24,7 @@ global cell proposals_list;
         begin_cell()
         .store_ref(dao_name)
         .store_ref(dao_purpose)
+        .store_uint(creation_time,64)
         .store_dict(members)
         .store_dict(proposals_list)
         .end_cell()
@@ -46,16 +49,16 @@ global cell proposals_list;
     int query_id = in_msg_body~load_uint(64);
 
     if (op == "op::add_new_member"c) {;;Add new member
-        int position = in_msg_body~load_uint(32);
-        slice address = in_msg_body~load_msg_addr();
-        members.udict_add?(256,position,address);
+        int position = in_msg_body~load_uint(256);
+        cell address = in_msg_body~load_ref();
+        members~udict_set_ref(256,position,address);
         save_data();
         return();
     }
     if (op == "op::add_new_proposal"c) {;;Create proposal
-        int position = in_msg_body~load_uint(32);
-        slice address = in_msg_body~load_msg_addr();
-        proposals_list.udict_set(256,position,address);
+        int position = in_msg_body~load_uint(256);
+        cell address = in_msg_body~load_ref();
+        proposals_list~udict_set_ref(256,position,address);
         save_data();
         return();
     }
@@ -66,17 +69,6 @@ global cell proposals_list;
 }
 
 ;;===============================GETTERS==============================
-
-cell get_dao_members() method_id {
-    load_data();
-    return members;
-}
-
-cell get_dao_proposals() method_id {
-    load_data();
-    return proposals_list;
-}
-
 cell get_dao_name() method_id {
     load_data();
     return dao_name;
@@ -87,6 +79,17 @@ cell get_dao_purpose() method_id {
     return dao_purpose;
 }
 
-cell getConfig() method_id {
-    return get_data();
+int get_dao_creation_time() method_id {
+    load_data();
+    return creation_time;
+}
+
+cell get_dao_members() method_id {
+    load_data();
+    return members;
+}
+
+cell get_dao_proposals() method_id {
+    load_data();
+    return proposals_list;
 }

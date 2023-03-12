@@ -15,25 +15,25 @@ export async function run(provider: NetworkProvider, args: string[]) {
 
     const dao = provider.open(Dao.createFromAddress(address));
 
-    const membersBefore = await dao.getMembersList();
-    const position = membersBefore.asSlice.length + 1;
-    await dao.sendNewMember(provider.sender(), {
+    const proposalsBefore = await dao.getProposalsList();
+    const position = proposalsBefore.asSlice.length + 1;
+    await dao.sendNewProposal(provider.sender(), {
         position: position,
         address: optAddress,
     });
 
-    ui.write('Waiting for address to be added...');
+    ui.write('Waiting for proposal to be added...');
 
-    let membersAfter = await await dao.getMembersList();
+    let proposalsAfter = await await dao.getProposalsList();
 
     let attempt = 1;
-    while (membersAfter?.equals(membersBefore)) {
+    while (proposalsAfter?.equals(proposalsBefore)) {
         ui.setActionPrompt(`Attempt ${attempt}`);
         await sleep(2000);
-        membersAfter = await dao.getMembersList();
+        proposalsAfter = await dao.getProposalsList();
         attempt++;
     }
 
     ui.clearActionPrompt();
-    ui.write('member added successfully!');
+    ui.write('proposal added successfully!');
 }

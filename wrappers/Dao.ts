@@ -14,42 +14,31 @@ import {
     toNano,
 } from 'ton-core';
 import { crc32, crc32str } from '../utils/crc32';
-export type List = {
-    address: Address;
-};
 
 export type DaoConfig = {
     dao_name: string;
     dao_purpose: string;
-    members: List[];
-    proposals_list: List[];
+    creation_time: number;
+    members: Dictionary<number, string>;
+    proposals_list: Dictionary<number, string>;
 };
 
-const ListValue: DictionaryValue<List> = {
-    serialize(src: List, builder) {
-        builder.storeAddress(src.address);
+const ListValue: DictionaryValue<string> = {
+    serialize(src: string, builder) {
+        builder.storeStringRefTail(src);
     },
     parse(src) {
-        return {
-            address: src.loadAddress(),
-        };
+        return src.loadStringRefTail();
     },
 };
 
 export function daoConfigToCell(config: DaoConfig): Cell {
-    const members_list = Dictionary.empty(Dictionary.Keys.Uint(32), ListValue);
-    for (let i = 0; i < config.members.length; i++) {
-        members_list.set(i, config.members[i]);
-    }
-    const proposal_list = Dictionary.empty(Dictionary.Keys.Uint(32), ListValue);
-    for (let i = 0; i < config.proposals_list.length; i++) {
-        proposal_list.set(i, config.proposals_list[i]);
-    }
     return beginCell()
         .storeStringRefTail(config.dao_name)
         .storeStringRefTail(config.dao_purpose)
-        .storeDict(members_list)
-        .storeDict(proposal_list)
+        .storeUint(config.creation_time, 64)
+        .storeDict(config.members)
+        .storeDict(config.proposals_list)
         .endCell();
 }
 
@@ -58,8 +47,9 @@ export function decodeConfig(cell: Cell): DaoConfig {
     return {
         dao_name: slice.loadStringTail(),
         dao_purpose: slice.loadStringTail(),
-        members: slice.loadDict(Dictionary.Keys.Uint(32), ListValue).values(),
-        proposals_list: slice.loadDict(Dictionary.Keys.Uint(32), ListValue).values(),
+        creation_time: slice.loadUint(64),
+        members: slice.loadDict(Dictionary.Keys.Uint(256), ListValue),
+        proposals_list: slice.loadDict(Dictionary.Keys.Uint(256), ListValue),
     };
 }
 
@@ -89,14 +79,14 @@ export class Dao implements Contract {
         via: Sender,
         opts: {
             position: number;
-            address: Address;
+            address: string;
         }
     ) {
         const messageBody = beginCell()
             .storeUint(crc32str('op::add_new_member'), 32)
             .storeUint(0, 64) // query id
-            .storeUint(opts.position, 32)
-            .storeAddress(opts.address)
+            .storeUint(opts.position, 256)
+            .storeStringRefTail(opts.address)
             .endCell();
 
         await provider.internal(via, {
@@ -111,14 +101,14 @@ export class Dao implements Contract {
         via: Sender,
         opts: {
             position: number;
-            address: Address;
+            address: string;
         }
     ) {
         const messageBody = beginCell()
             .storeUint(crc32str('op::add_new_proposal'), 32)
             .storeUint(0, 64) // query id
-            .storeUint(opts.position, 32)
-            .storeAddress(opts.address)
+            .storeUint(opts.position, 256)
+            .storeStringRefTail(opts.address)
             .endCell();
 
         await provider.internal(via, {
@@ -136,16 +126,15 @@ export class Dao implements Contract {
         return (await provider.get('get_dao_purpose', [])).stack.readString();
     }
 
+    async getDaoCreationTime(provider: ContractProvider) {
+        return (await provider.get('get_dao_creation_time', [])).stack.readBigNumber();
+    }
+
     async getMembersList(provider: ContractProvider) {
         return (await provider.get('get_dao_members', [])).stack.readCell();
     }
 
     async getProposalsList(provider: ContractProvider) {
         return (await provider.get('get_dao_proposals', [])).stack.readCell();
-    }
-
-    async getConfig(provider: ContractProvider) {
-        let config = (await provider.get('get_dao_proposals', [])).stack.readCell();
-        return decodeConfig(config);
     }
 }
