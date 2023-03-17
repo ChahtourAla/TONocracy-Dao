@@ -24,7 +24,7 @@ export async function run(provider: NetworkProvider, args: string[]) {
 
     ui.write('Waiting for address to be added...');
 
-    let membersAfter = await await dao.getMembersList();
+    let membersAfter = await dao.getMembersList();
 
     let attempt = 1;
     while (membersAfter?.equals(membersBefore)) {

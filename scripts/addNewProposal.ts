@@ -1,4 +1,4 @@
-import { Address, toNano } from 'ton-core';
+import { Address } from 'ton-core';
 import { NetworkProvider, sleep } from '@ton-community/blueprint';
 import { Dao } from '../wrappers/Dao';
 
@@ -6,7 +6,7 @@ export async function run(provider: NetworkProvider, args: string[]) {
     const ui = provider.ui();
 
     const address = Address.parse(args.length > 0 ? args[0] : await ui.input('Dao address'));
-    const optAddress = args.length > 0 ? args[0] : await ui.input('Member address to add');
+    const optAddress = args.length > 0 ? args[0] : await ui.input('Proposal address to add');
 
     if (!(await provider.isContractDeployed(address))) {
         ui.write(`Error: Contract at address ${address} is not deployed!`);
@@ -24,7 +24,7 @@ export async function run(provider: NetworkProvider, args: string[]) {
 
     ui.write('Waiting for proposal to be added...');
 
-    let proposalsAfter = await await dao.getProposalsList();
+    let proposalsAfter = await dao.getProposalsList();
 
     let attempt = 1;
     while (proposalsAfter?.equals(proposalsBefore)) {

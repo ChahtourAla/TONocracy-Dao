@@ -1,16 +1,6 @@
 import { getHttpEndpoint } from '@orbs-network/ton-access';
 import { TonClient, Address } from 'ton';
 import { Dao } from '../wrappers/Dao';
-import { Dictionary, DictionaryValue } from 'ton-core';
-
-const ListValue: DictionaryValue<string> = {
-    serialize(src: string, builder) {
-        builder.storeStringRefTail(src);
-    },
-    parse(src) {
-        return src.loadStringRefTail();
-    },
-};
 
 export async function run() {
     // initialize ton rpc client on testnet
@@ -18,7 +8,7 @@ export async function run() {
     const client = new TonClient({ endpoint });
 
     // open Dao instance by address
-    const daoAddress = Address.parse('EQD8_6QC_5vLmMqSyxdwUpUGYUESYEh-4LpZINEP1FaX8LK7'); // replace with dao address
+    const daoAddress = Address.parse('EQArDrMEoQZdsxtxby1lLnP7qv0rLRPBOP4OihBmrmbpbrPt'); // replace with dao address
     const dao = new Dao(daoAddress);
     const daoContract = client.open(dao);
 
